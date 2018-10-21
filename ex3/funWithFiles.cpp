@@ -1,48 +1,66 @@
 #include<iostream>
 #include<fstream>
+#include<string>
+
+
+// a far slower version of read file
+void readLine(std::fstream* stream) {
+    char symbol;
+    while (stream && symbol != '\n') {
+        std::cout << (bool) stream->get(symbol);
+    }
+}
 
 
 void testSimpleTestFile() {
+    // char*
     std::string filename = "simpleText.txt";
-    std::ifstream is_txtFile(filename, std::ios::binary | std::ios::in | std::ios::out);
+
+    std::ifstream file_is(filename, std::ios::binary | std::ios::in);
     
-    if (!is_txtFile.is_open()) { // of simply !s_txtFile
+    if (!file_is.is_open()) { // of simply !s_txtFile
         std::cerr << "No such file found: " << filename;
         return;
     }
 
+    char buffer[300];
+
+    while ( !file_is.eof() ) {
+        file_is.getline(buffer, 300);
+        std::cout << buffer << std::endl;
+    }
+
     // get char
     char ch;
-
-    is_txtFile.get(ch);
+    file_is.get(ch);
 
     std::cout << "Single char read: " << ch;
 
     // get word
     char wordBuffer[60];
     // words are separated by space
-    is_txtFile.get(wordBuffer, 60, ' ');
+    file_is.get(wordBuffer, 60, ' ');
 
     std::cout << "Word: " << wordBuffer << std::endl;
 
     // which is the same as
-    is_txtFile >> wordBuffer;
+    file_is >> wordBuffer;
 
     std::cout << "Word: " << wordBuffer << std::endl;
 
     char lineBuffer[300];
     // get line
-    is_txtFile.get(lineBuffer, 300, '\n'); // here \n is the default delimiter
+    file_is.get(lineBuffer, 300, '\n'); // here \n is the default delimiter
 
     std::cout << "Line with get: " << lineBuffer << std::endl;
 
     // which is similar to
-    is_txtFile.getline(lineBuffer, 300);
+    file_is.getline(lineBuffer, 300);
 
     std::cout << "Line with getline: " << lineBuffer << std::endl;
     
 
-    is_txtFile.close();
+    file_is.close();
 }
 
 
@@ -90,7 +108,11 @@ void testSimpleBinaryFile() {
     int y = 2;
 
     std::cout << s_binFile.tellg() << " " << s_binFile.tellp() << std::endl;
-    s_binFile.write((char*)&x, sizeof(x));
+    std::cout << "Writing state: " << (bool) s_binFile.write((char*)&x, sizeof(x));
+
+    std::cout << "After write: " << !!s_binFile << std::endl;
+
+
     std::cout << s_binFile.tellg() << " " << s_binFile.tellp() << std::endl;
 
     /* s_binFile.seekg(0, std::ios::beg); */
@@ -106,8 +128,8 @@ void testSimpleBinaryFile() {
 
 int main()
 {
-    testSimpleTestFile();
-    /* testSimpleBinaryFile(); */
+    /* testSimpleTestFile(); */
+    testSimpleBinaryFile();
     /* testSimleBinaryFileArr(); */
 
     return 0;
