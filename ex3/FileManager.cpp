@@ -124,11 +124,20 @@ void FileManager::censorWord(char* word) {
 
 
 void FileManager::getFirtChunk() {
-//TODO
+    m_file_stream->seekg(0, std::ios::beg);
+
+    getNextChunk(MAX_CHUNK_SIZE);
 }
+
 void FileManager::getLastChunk() {
-//TODO
+    m_file_stream->seekg(0, std::ios::beg);
+    
+    int lastChunkPosition = int(m_file_stream->tellg()) - MAX_CHUNK_SIZE;
+    // in case the file is really short
+    lastChunkPosition = lastChunkPosition > 0 ? lastChunkPosition : 0;
+    m_file_stream->seekg(lastChunkPosition);
 }
+
 void FileManager::deleteWord(char* word) {
 //TODO
 } // first occurrence
