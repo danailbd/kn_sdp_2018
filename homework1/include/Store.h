@@ -9,7 +9,6 @@ bool fileExists(const char* name) {
     return std::ifstream(name).good();
 }
 
-
 template <class T>
 class Store
 {
@@ -42,6 +41,8 @@ class Store
                     std::cout << "Problem creating the db file. There's no chance of opening it as well" << std::endl;
                     return false;
                 }
+            } else {
+                std::cout << "Loading existing database";
             }
 
             // Now open the existing db file
@@ -135,12 +136,13 @@ class Store
 
         /**
          * Find an element by its name.
+         * XXX it would be better if this becomes more generic
          */
         T find (char* name) {
             T foundItem;
             for (int i = 0; i < m_metadata.m_size; ++i) {
                 getAtIdx(i, foundItem);
-                if (!strcmp(foundItem.m_name, name)) {
+                if (!strcmp(foundItem.getName(), name)) {
                     return foundItem;
                 }
             }
@@ -304,3 +306,44 @@ struct Store<T>::StoreMetadata {
         m_currentId = 1;
     }
 };
+
+
+/**
+ * Enables a class to be saved to the store.
+ */
+class StoreItem {
+    // give access to default constructor
+    friend class Store<StoreItem>;
+
+    public:
+        int getId () const {
+            return m_id;
+        }
+
+        bool isSaved () {
+            return m_id > 0;
+        }
+
+
+    protected:
+        // Only the Store should be able assign ids
+        void setId (int id) {
+            m_id = id;
+        }
+
+        // create a placeholder object
+        StoreItem() {
+            m_id = INVALID_ID;
+        }
+
+        StoreItem(const StoreItem& other) {
+            m_id = other.m_id; 
+        }
+
+
+    protected: 
+        // Service field for deleted items
+        int m_id;
+        bool m_isDeleted;
+};
+
