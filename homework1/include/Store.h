@@ -222,6 +222,7 @@ class Store
             }
 
             if (success) {
+                remove(m_dbFilename.c_str());
                 success = rename(tmpFileName.c_str(), m_dbFilename.c_str());
             } else { // bailout in case something has gone wrong
                 remove(tmpFileName.c_str());
@@ -232,6 +233,8 @@ class Store
             if (!success) {
                 m_metadata.m_size--;
                 writeMetadata();
+            } else {
+                std::cout << "Unsuccessful renaming for the updated db file. Code: " << success << std::endl;
             }
         }
 
