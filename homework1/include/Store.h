@@ -9,6 +9,7 @@ bool fileExists(const char* name) {
     return std::ifstream(name).good();
 }
 
+
 template <class T>
 class Store
 {
@@ -210,31 +211,44 @@ class Store
                 return false;
             }
 
+            // Write the updated metadata
+            m_metadata.m_size--;
             tmpDb_os.write((char*)& m_metadata, sizeof(m_metadata));
+
             T tmpItem;
-            bool success = true;
-            for (int i = 0; i < m_metadata.m_size && success; ++i) {
+            bool tmpFileWriteSuccess = true;
+            for (int i = 0; i < (m_metadata.m_size + 1) && tmpFileWriteSuccess; ++i) {
                 if (i == excludedItemIdx) continue;
 
                 getAtIdx(i, tmpItem); // item should exist
-                // TODO ensure all write operations pass
-                success = !!tmpDb_os.write((char*)& tmpItem, sizeof(tmpItem));
+                // ensure all write operations pass
+                tmpFileWriteSuccess = !!tmpDb_os.write((char*)& tmpItem, sizeof(tmpItem));
+                std::cout << "Here" << std::endl;
             }
 
-            if (success) {
-                remove(m_dbFilename.c_str());
-                success = rename(tmpFileName.c_str(), m_dbFilename.c_str());
+            // The Stream is not needed anymore. If not closed, it won't be possible to 
+            // delete the file.
+            tmpDb_os.close();
+
+            if (tmpFileWriteSuccess) {
+                db_ios.close();
+                bool removeFailure = remove(m_dbFilename.c_str()),
+                     renameFailure = rename(tmpFileName.c_str(), m_dbFilename.c_str());
+                // The rename operation might have failed
+                // it succeeds with a 0 - http://www.cplusplus.com/reference/cstdio/rename/
+                if (!removeFailure && !renameFailure) {
+                    return init();
+                } else {
+                    // restore the value as adding was unsuccessful
+                    m_metadata.m_size++;
+                    std::cout << "Unsuccessful renaming for the updated db file. Code: " << removeFailure
+                              << " ; " << renameFailure << std::endl;
+                    return false;
+                }
             } else { // bailout in case something has gone wrong
+                std::cout << "Unsuccessful creating of temp db file. Code: " << std::endl;
                 remove(tmpFileName.c_str());
-            }
-
-            // The rename operation might have failed
-            // it succeeds with a 0 - http://www.cplusplus.com/reference/cstdio/rename/
-            if (!success) {
-                m_metadata.m_size--;
-                writeMetadata();
-            } else {
-                std::cout << "Unsuccessful renaming for the updated db file. Code: " << success << std::endl;
+                return false; 
             }
         }
 
@@ -350,3 +364,14 @@ class StoreItem {
         bool m_isDeleted;
 };
 
+
+template <class T>
+class IndexedStore : public Store<T> {
+    
+    public:
+        IndexedStore(char* db_name): Store<T>(db_name) {}
+
+        void add (T& item) {
+            Store<T>::add(item);
+        }
+};
