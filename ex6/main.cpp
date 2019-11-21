@@ -9,17 +9,17 @@ struct Node {
     Node* next;
 
 
-    Node (int _data, Node* next = nullptr)
-        : data(_data) {}
+    Node (int _data, Node* _next = nullptr)
+        : data(_data), next(_next) {}
 };
 
 int main()
 {
-    Node nFive(10), // last node
-         nFour(5, &nFive),
-         nThree(7, &nFour),
-         nTwo(3, &nThree),
-         start(1, &nTwo);
+    Node nFive(10); // last node
+    Node nFour(5, &nFive);
+    Node nThree(7, &nFour);
+    Node nTwo(3, &nThree);
+    Node start(1, &nTwo); // first node
 
     findMidEl(start);    
 
